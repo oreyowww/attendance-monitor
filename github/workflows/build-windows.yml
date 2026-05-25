@@ -7,6 +7,10 @@ name: Build Windows App
       - master
   workflow_dispatch: {}
 
+# THIS IS THE MAGIC FIX: It gives the workflow permission to upload the .exe to the Releases tab!
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
