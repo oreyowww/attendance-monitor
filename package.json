@@ -1,0 +1,11 @@
+{
+  "name": "attendance-monitor",
+  "version": "1.0.0",
+  "description": "TRYCEII EMPLOYEES ATTENDANCE MONITOR",
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "latest"
+  }
+}

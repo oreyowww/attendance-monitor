@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRYCEII EMPLOYEES ATTENDANCE MONITOR</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Digital Clock Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f2fbf5',
+                            100: '#e1f6e8',
+                            200: '#c4ecd4',
+                            300: '#96dbb3',
+                            400: '#60c38c',
+                            500: '#228B22',
+                            600: '#1e7a1e',
+                            700: '#1a691a',
+                            800: '#155815',
+                            900: '#114711',
+                            950: '#0a2a0a',
+                        },
+                        gold: {
+                            50: '#fffbf0',
+                            100: '#fff5d6',
+                            400: '#ffc241',
+                            500: '#FFD700',
+                            600: '#e6b800',
+                            900: '#7d5d00',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4;
+            /* Modern glassy background overlay with subtle mesh gradients */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(34, 197, 94, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 215, 0, 0.08), transparent 25%), url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        /* Custom scrollbars for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Scanner pulsing animations */
+        @keyframes radar-pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .pulse-ring {
+            animation: radar-pulse 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+        }
+        
+        /* Holy glowing animation for image */
+        @keyframes holy-glow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.3)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 40px rgba(245, 158, 11, 0.7)); transform: scale(1.02); }
+        }
+        .animate-holy-glow {
+            animation: holy-glow 5s ease-in-out infinite;
+        }
+        
+        /* Digital Clock Animation and Glow */
+        .digital-clock {
+            font-family: 'Share Tech Mono', monospace;
+            color: #14532d; /* Deep primary green */
+            animation: clock-pulse 3s ease-in-out infinite;
+        }
+        @keyframes clock-pulse {
+            0%, 100% { text-shadow: 0 0 15px rgba(34, 197, 94, 0.4), 0 0 30px rgba(34, 197, 94, 0.2); }
+            50% { text-shadow: 0 0 25px rgba(34, 197, 94, 0.8), 0 0 45px rgba(34, 197, 94, 0.5); }
+        }
+        
+        .animate-clock-pulse {
+            animation: clock-pulse 3s ease-in-out infinite;
+        }
+        
+        /* Shimmering Gradient Animation for Success Feedback */
+        @keyframes gradient-pan {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-pan {
+            background-size: 200% 200%;
+            animation: gradient-pan 3s ease infinite;
+        }
+        
+        /* Profile picture success bounce */
+        @keyframes pop-bounce {
+            0% { transform: scale(0.8); }
+            40% { transform: scale(1.15); }
+            70% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop-bounce {
+            animation: pop-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- Network Restriction Overlay -->
+    <div id="location-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center text-center p-6 text-white transition-opacity duration-500">
+        <i data-lucide="wifi" class="w-16 h-16 text-emerald-500 mb-4 animate-bounce"></i>
+        <h2 class="text-2xl font-bold mb-2">Verifying Network...</h2>
+        <p class="text-slate-400 text-sm max-w-md">This system is restricted to the campus Wi-Fi network. Checking authorization...</p>
+    </div>
+
+    <!-- App Container -->
+    <div class="flex w-full h-full">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gradient-to-b from-primary-950 to-primary-900 text-white flex flex-col justify-between shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.1)] border-r border-white/5 relative overflow-hidden">
+            <!-- Decorative Sidebar Glow -->
+            <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                <div class="relative z-10 flex flex-col flex-1 min-h-0">
+
+                <!-- Header Branding (Logo Only) -->
+                <div class="p-6 border-b border-primary-800 flex justify-center items-center shrink-0 bg-primary-950/20">
+                    <img src="jdservices.png" alt="Developer Logo" class="w-40 h-40 rounded-full shadow-lg animate-holy-glow object-cover">
+                </div>
+
+                <!-- Navigation Links -->
+                    <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto" id="sidebar-nav">
+                    <button onclick="switchTab('scanner')" id="btn-tab-scanner" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-gold-400 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] border border-white/5 relative overflow-hidden">
+                        <i data-lucide="scan-eye" class="w-5 h-5"></i>
+                        <span>Live Scan Monitor</span>
+                    </button>
+                    <div id="admin-nav-links" class="hidden space-y-1.5">
+                        <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            <span>Dashboard</span>
+                        </button>
+                        <button onclick="switchTab('personnel')" id="btn-tab-personnel" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            <span>Personnel Directory</span>
+                        </button>
+                        <button onclick="switchTab('logs')" id="btn-tab-logs" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                            <span>Attendance Logs</span>
+                        </button>
+                        <button onclick="switchTab('hardware')" id="btn-tab-hardware" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                            <span>Hardware Hookup</span>
+                        </button>
+                        <button onclick="switchTab('settings')" id="btn-tab-settings" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
+                            <span>System Settings</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <!-- Pinned Admin Actions -->
+                <div class="p-4 border-t border-primary-800/50 shrink-0 bg-primary-900/30">
+                    <button onclick="openAdminLoginModal()" id="btn-admin-login" class="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-bold text-sm text-primary-950 bg-gradient-to-r from-gold-400 to-gold-500 hover:from-gold-300 hover:to-gold-400 shadow-lg shadow-gold-500/20 active:scale-95">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                        <span>Admin Login</span>
+                    </button>
+                    <button onclick="handleAdminLogout()" id="btn-admin-logout" class="hidden w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-bold text-sm text-white bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 shadow-lg shadow-rose-500/20 active:scale-95 border border-rose-400/20">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                        <span>Logout Admin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Meta / Connection State -->
+            <div class="p-4 border-t border-primary-800 shrink-0 relative z-10">
+                <div class="bg-primary-950/50 rounded-xl p-3 border border-primary-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-primary-200">Scanner Hookup</span>
+                        <span id="badge-connection-state" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/10 text-gold-500">
+                            <span class="w-1.5 h-1.5 bg-gold-500 rounded-full mr-1.5 animate-pulse"></span>Keyboard Wedge
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-primary-200">Cloud Sync</span>
+                        <span id="badge-cloud-state" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 transition-colors">
+                            <span id="cloud-state-dot" class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 transition-colors"></span><span id="cloud-state-text">Online</span>
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-primary-300 leading-relaxed border-t border-primary-800/50 pt-2 mt-2">
+                        Ready to intercept keyboard emulation scans. Make sure focus is kept on scanner view.
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            
+            <!-- Dashboard Tab -->
+            <section id="tab-dashboard" class="p-8 max-w-7xl mx-auto w-full space-y-8 hidden">
+                <!-- Row 1: Header & Greeting -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 lg:gap-5">
+                        <img src="school.png" alt="School Logo" class="w-12 h-12 lg:w-16 lg:h-16 object-contain drop-shadow-sm">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-extrabold text-primary-900 tracking-tight" id="dashboard-org-title">T.R. YANGCO CATHOLIC EDUCATIONAL INSTITUTE, INC.</h2>
+                            <p class="text-slate-500 font-medium" id="dashboard-org-subtitle">SCHOOL YEAR 2026-2027</p>
+                        </div>
+                    </div>
+                    <!-- Clock component -->
+                <div class="bg-white/80 backdrop-blur-xl px-6 py-4 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white flex items-center space-x-4">
+                        <div class="bg-primary-50 p-2 rounded-xl text-primary-600">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p id="live-time-clock" class="text-xl font-bold text-primary-900 leading-none">00:00:00</p>
+                            <p id="live-date-clock" class="text-xs font-semibold text-slate-400 uppercase mt-1">Thursday, May 21, 2026</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Live Statistics Stats -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Stat 1 -->
+                <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white flex items-center space-x-4 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                        <div class="bg-emerald-50 text-emerald-600 p-4 rounded-xl">
+                            <i data-lucide="user-check" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase tracking-wider">Present Today</span>
+                            <span id="stat-present-count" class="text-3xl font-extrabold text-primary-900">0</span>
+                        </div>
+                    </div>
+                    <!-- Stat 2 -->
+                <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white flex items-center space-x-4 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                        <div class="bg-rose-50 text-rose-600 p-4 rounded-xl">
+                            <i data-lucide="user-x" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase tracking-wider">Absent / Out</span>
+                            <span id="stat-absent-count" class="text-3xl font-extrabold text-primary-900">0</span>
+                        </div>
+                    </div>
+                    <!-- Stat 3 -->
+                <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white flex items-center space-x-4 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                        <div class="bg-gold-50 text-gold-600 p-4 rounded-xl">
+                            <i data-lucide="alarm-clock" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase tracking-wider">Late Arrivals</span>
+                            <span id="stat-late-count" class="text-3xl font-extrabold text-primary-900">0</span>
+                        </div>
+                    </div>
+                    <!-- Stat 4 -->
+                <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white flex items-center space-x-4 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+                        <div class="bg-primary-50 text-primary-600 p-4 rounded-xl">
+                            <i data-lucide="users" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Enrolled</span>
+                            <span id="stat-total-count" class="text-3xl font-extrabold text-primary-900">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Visual Charts & Analytics -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Bar Chart Layout -->
+                <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-primary-900">Attendance This Week</h3>
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Interactive Chart</span>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="weeklyAttendanceChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Department Breakdown Dynamic List -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-primary-900">Department Status</h3>
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Real-Time Distribution</span>
+                        </div>
+                        <div id="dept-status-list" class="space-y-4">
+                            <!-- Populated dynamically -->
+                            <div class="text-center text-slate-400 py-12 text-sm">No data recorded. Try scanning cards!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4: Live Ticker Feed -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] border border-white shadow-lg shadow-slate-200/50 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-primary-900">Latest Scanning Activities</h3>
+                        <button onclick="switchTab('logs')" class="text-primary-500 hover:text-primary-600 text-xs font-bold flex items-center gap-1">
+                            View All Logs <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="pb-3 pl-2">Time Stamp</th>
+                                    <th class="pb-3">Employee/User</th>
+                                    <th class="pb-3">RFID ID</th>
+                                    <th class="pb-3">Class/Department</th>
+                                    <th class="pb-3 text-right pr-2">Event</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-recent-scans-tbody" class="text-sm font-medium text-slate-600">
+                                <!-- Populated dynamically -->
+                                <tr>
+                                    <td colspan="5" class="text-center py-8 text-slate-400">No modern card scans have arrived today. Go to 'Live Scan Monitor' tab!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Scanner Tab -->
+            <section id="tab-scanner" class="p-4 lg:px-8 lg:py-6 max-w-7xl mx-auto w-full h-full flex flex-col block overflow-hidden relative">
+                <!-- Header & Huge Clock -->
+                <div class="shrink-0 text-center flex flex-col items-center mb-4 lg:mb-6">
+                    <div class="flex items-center justify-center gap-4 lg:gap-6">
+                        <img src="school.png" alt="School Logo" class="w-16 h-16 lg:w-20 lg:h-20 object-contain drop-shadow-md">
+                        <div class="text-center">
+                            <h2 class="text-2xl lg:text-4xl font-extrabold text-primary-900 tracking-tight drop-shadow-sm">T.R. YANGCO CATHOLIC EDUCATIONAL INSTITUTE, INC.</h2>
+                            <p class="text-slate-600 font-bold mt-1 tracking-widest text-[10px] uppercase">School Year 2026-2027 • Live Attendance Monitor</p>
+                        </div>
+                    </div>
+                    <div id="live-scan-huge-clock" class="text-6xl lg:text-8xl mt-2 lg:mt-4 tracking-tighter digital-clock relative z-10">00:00:00</div>
+                    <div id="live-scan-huge-date" class="text-xs lg:text-sm font-bold text-primary-800 uppercase tracking-widest mt-1 lg:mt-2 mb-2">Thursday, May 21, 2026</div>
+                    <h3 class="text-lg lg:text-xl font-bold text-primary-800 animate-clock-pulse">MABUHAY TRYCEIIAN</h3>
+                </div>
+
+                <!-- Middle Content -->
+                <div class="flex-1 flex flex-col min-h-0 items-center justify-center w-full mt-2 lg:mt-6">
+                    <!-- CENTERED COLUMN: User Identification Feedback & Scanner Simulator -->
+                    <div class="w-full max-w-3xl shrink-0 flex flex-col justify-center min-h-0 overflow-hidden">
+                        
+                        <!-- CARD 1: User Profile Card (Dynamic scan target) -->
+                        <div id="live-scan-card" class="bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 text-white rounded-[2rem] p-6 lg:p-8 shadow-2xl relative overflow-hidden transition-all duration-500 transform scale-100 border border-primary-700/50">
+                            <!-- Card background texture overlay -->
+                            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                            
+                            <!-- Check-in Flag Status Tag & Scanner Widget -->
+                            <div class="absolute top-4 right-4 lg:top-6 lg:right-6 flex flex-col items-end gap-3 z-20">
+                                <span id="live-scan-badge" class="px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-black/40 text-slate-200 backdrop-blur-md uppercase tracking-widest inline-block border border-white/10">
+                                    Awaiting Card Tap
+                                </span>
+                                
+                                <!-- Integrated Scanner Widget -->
+                                <div class="flex items-center gap-3 bg-black/20 backdrop-blur-md p-1.5 pl-4 rounded-full border border-white/10 shadow-lg transition-all duration-300">
+                                    <div class="flex flex-col text-right">
+                                        <span class="text-[9px] font-bold tracking-widest text-emerald-400 uppercase leading-none mb-0.5" id="visual-scanner-status-text">ONLINE</span>
+                                        <span class="text-[10px] font-black text-white tracking-tight uppercase leading-none">TAP CARD</span>
+                                    </div>
+                                    <div class="relative w-10 h-10 flex items-center justify-center shrink-0">
+                                        <div class="absolute inset-0 bg-white/20 rounded-full opacity-50 animate-pulse"></div>
+                                        <div class="absolute inset-0 bg-white/10 rounded-full pulse-ring"></div>
+                                        
+                                        <div id="visual-scanner-body" class="relative w-10 h-10 bg-slate-700 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center transition-all duration-300">
+                                            <div id="visual-scanner-led" class="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e] transition-all duration-300 border-2 border-slate-700"></div>
+                                            <i data-lucide="nfc" class="w-4 h-4 text-slate-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="relative z-10 flex flex-col items-center py-2 lg:py-4 text-center">
+                                <!-- Profile Photo with live color borders -->
+                                <div id="live-scan-photo-border" class="w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-white/10 p-1.5 lg:p-2 mb-4 lg:mb-6 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-xl">
+                                    <div id="live-scan-photo" class="w-full h-full rounded-full overflow-hidden bg-slate-700 flex items-center justify-center">
+                                        <i data-lucide="user" class="w-20 h-20 lg:w-28 lg:h-28 text-white/40"></i>
+                                    </div>
+                                </div>
+
+                                <h4 id="live-scan-name" class="text-2xl lg:text-3xl font-black tracking-tight uppercase drop-shadow-md">System Terminal</h4>
+                                <p id="live-scan-role" class="text-xs lg:text-sm text-gold-400 font-bold uppercase tracking-widest mt-1 lg:mt-2">Standby Mode</p>
+                                
+                                <div class="w-full grid grid-cols-2 gap-4 lg:gap-6 text-left bg-black/20 p-4 lg:p-6 rounded-2xl backdrop-blur-sm border border-white/10 mt-4 lg:mt-6 shadow-inner">
+                                    <div>
+                                        <span class="block text-[11px] uppercase font-bold text-primary-200 tracking-widest mb-1">Personnel ID</span>
+                                        <span id="live-scan-id" class="text-base lg:text-lg font-bold font-mono text-white">---------</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[11px] uppercase font-bold text-primary-200 tracking-widest mb-1">Dept/Class</span>
+                                        <span id="live-scan-dept" class="text-base lg:text-lg font-bold text-white">---------</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[11px] uppercase font-bold text-primary-200 tracking-widest mb-1">Card RFID UID</span>
+                                        <span id="live-scan-uid" class="text-sm font-bold font-mono text-gold-300">---------</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[11px] uppercase font-bold text-primary-200 tracking-widest mb-1">Logged Timestamp</span>
+                                        <span id="live-scan-time" class="text-sm font-bold font-mono text-white">--:--:--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Bottom Text -->
+                <div class="shrink-0 pt-4 mt-4 lg:mt-6 border-t border-slate-200/50 flex flex-col items-center justify-center space-y-3">
+                    <h2 class="text-lg md:text-2xl lg:text-3xl font-black tracking-widest uppercase text-center whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-primary-900 via-primary-600 to-gold-600 drop-shadow-sm transform transition-all duration-700 hover:scale-105">Transformative Christ-Centered Education</h2>
+                </div>
+            </section>
+
+            <!-- Personnel Directory Tab -->
+            <section id="tab-personnel" class="p-8 max-w-7xl mx-auto w-full space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-primary-900 tracking-tight">Personnel Directory</h2>
+                        <p class="text-sm text-slate-500 font-medium">Register personnel profiles and link them with hardware RFID tags.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="csv-upload-input" accept=".csv" onchange="processCSVImport(event)" class="hidden">
+                        <button onclick="downloadCSVTemplate()" class="hidden sm:flex bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-4 py-2.5 rounded-xl shadow-sm items-center justify-center gap-2 text-sm transition">
+                            <i data-lucide="file-down" class="w-4 h-4"></i> Get Template
+                        </button>
+                        <button onclick="triggerCSVImport()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-4 py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 text-sm transition">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
+                        </button>
+                        <button onclick="openPersonnelModal()" class="bg-primary-600 hover:bg-primary-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-primary-600/10 flex items-center justify-center gap-2 text-sm transition">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> Add Personnel Member
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Directory Search/Filter Bar -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4.5 h-4.5"></i>
+                        </div>
+                        <input type="text" id="search-personnel-input" oninput="filterPersonnel()" placeholder="Search names, departments, ID codes..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm font-medium">
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <select id="filter-personnel-role" onchange="filterPersonnel()" class="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100">
+                            <option value="All">All Roles</option>
+                            <option value="NON-TEACHING STAFF">NON-TEACHING STAFF</option>
+                            <option value="FACULTY">FACULTY</option>
+                            <option value="ADMINISTRATOR">ADMINISTRATOR</option>
+                        </select>
+                        <select id="filter-personnel-dept" onchange="filterPersonnel()" class="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100">
+                            <!-- Injected dynamically -->
+                            <option value="All">All Depts</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Personnel Master Table -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="py-4 pl-6">Profile photo & Name</th>
+                                    <th class="py-4">Role</th>
+                                    <th class="py-4">Department / Class</th>
+                                    <th class="py-4 font-mono">RFID Unique ID</th>
+                                    <th class="py-4 text-right pr-6">Management</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personnel-table-tbody" class="text-sm font-medium text-slate-600 divide-y divide-slate-50">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attendance Logs Tab -->
+            <section id="tab-logs" class="p-8 max-w-7xl mx-auto w-full space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-primary-900 tracking-tight">Hardware Transaction Log</h2>
+                        <p class="text-sm text-slate-500 font-medium">Chronological database of all tap-in check-in and check-out logs.</p>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <button onclick="exportLogsToExcel()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export to Excel
+                        </button>
+                        <button onclick="clearAllLogs()" class="bg-rose-50 border border-rose-100 hover:bg-rose-100/70 text-rose-600 font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Reset Logs
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Log filter options -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Search Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Search Employee</label>
+                        <input type="text" id="log-search" oninput="filterLogs()" placeholder="Search Name/ID..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm font-medium">
+                    </div>
+                    <!-- Date Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Check-In Date Filter</label>
+                        <input type="date" id="log-date" onchange="filterLogs()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm font-medium">
+                    </div>
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Status Flag</label>
+                        <select id="log-status" onchange="filterLogs()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm font-medium">
+                            <option value="All">All Events</option>
+                            <option value="Check-In">Check-In (On-Time)</option>
+                            <option value="Late Check-In">Check-In (Late)</option>
+                            <option value="Check-Out">Check-Out</option>
+                        </select>
+                    </div>
+                    <!-- Department Filter -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Department</label>
+                    <select id="log-dept" onchange="filterLogs()" class="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium transition-all duration-300">
+                            <option value="All">All Departments</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Logs Master List Table -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="py-4 pl-6">Stamp Time & Date</th>
+                                    <th class="py-4">Personnel Member Name</th>
+                                    <th class="py-4">Group Classification</th>
+                                    <th class="py-4 font-mono">Card UID No.</th>
+                                    <th class="py-4 text-right pr-6">Scanned Status Indicator</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-tbody" class="text-sm font-medium text-slate-600 divide-y divide-slate-50">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hardware Configuration Guide Tab -->
+            <section id="tab-hardware" class="p-8 max-w-7xl mx-auto w-full space-y-6 hidden">
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-2xl font-extrabold text-primary-900 tracking-tight">Hardware Integration Protocol</h2>
+                    <p class="text-sm text-slate-500 font-medium">Hook up physical RFID readers instantly without deploying separate backends.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Setup Column Left: Physical setup instructions -->
+                    <div class="space-y-6">
+                        <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="bg-primary-50 text-primary-500 p-2.5 rounded-xl">
+                                    <i data-lucide="usb" class="w-5.5 h-5.5"></i>
+                                </div>
+                                <h3 class="font-bold text-primary-900 text-base">Method A: USB Keyboard Emulators (Recommended)</h3>
+                            </div>
+                            <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                                Most commercial USB RFID card readers act as passive standard keyboards (frequently called "Keyboard Wedges"). No programming necessary!
+                            </p>
+                            <ol class="space-y-3.5 text-xs text-slate-600 list-decimal pl-4 leading-relaxed">
+                                <li>Simply plug the USB cable of your RFID scanner reader into any computer USB port.</li>
+                                <li>The hardware scanner will light up, indicating operational readiness.</li>
+                                <li>Open the <span class="text-primary-600 font-semibold cursor-pointer" onclick="switchTab('scanner')">Live Scan Monitor</span> tab in this app.</li>
+                                <li>Focus your pointer on the page. Swiping card characters directly mimics typed sequences ending with the "Enter" key, triggering system check-ins.</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="bg-gold-50 text-gold-500 p-2.5 rounded-xl">
+                                    <i data-lucide="cpu" class="w-5.5 h-5.5"></i>
+                                </div>
+                                <h3 class="font-bold text-primary-900 text-base">Method B: Web Serial API (Direct Microcontroller Hookups)</h3>
+                            </div>
+                            <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                                Connect microcontrollers directly (such as Arduino, ESP32, or Raspberry Pi) linked with RC522 or PN532 RFID readers!
+                            </p>
+                            <div class="space-y-3">
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <h4 class="font-bold text-slate-700 text-xs mb-1">Arduino Serial Code Template</h4>
+                                    <p class="text-[11px] text-slate-500 leading-relaxed mb-2.5">
+                                        Flash this instruction to your Arduino to broadcast scanned RFID tags over the USB Serial interface:
+                                    </p>
+                                    <pre class="bg-slate-900 text-slate-300 text-[10px] p-3 rounded-lg font-mono overflow-x-auto leading-relaxed select-all">
+void setup() {
+  Serial.begin(9600); // Connect at 9600 baud
+}
+void loop() {
+  // Read RFID Card UID...
+  if (cardDetected) {
+    Serial.println(cardUID); // Print string ending with \n
+  }
+}</pre>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <button id="btn-webserial-connect" onclick="toggleWebSerial()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                                        <i data-lucide="cable" class="w-4 h-4"></i> Establish Serial Connection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Setup Column Right: Hardware diagnostic console -->
+                    <div class="bg-slate-950 text-slate-200 p-6 rounded-2xl shadow-xl flex flex-col h-full min-h-[480px]">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                <h3 class="font-mono text-xs font-bold text-slate-400">HARDWARE TERMINAL LOGS</h3>
+                            </div>
+                            <button onclick="clearTerminalLogs()" class="text-[11px] font-bold text-slate-500 hover:text-slate-300 transition">Clear Console</button>
+                        </div>
+                        
+                        <!-- Terminal Search Bar -->
+                        <div class="mb-3 relative shrink-0">
+                            <input type="text" id="terminal-search-input" oninput="filterTerminalLogs()" placeholder="Search UIDs or log text..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-emerald-400 placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 font-mono transition-colors">
+                        </div>
+
+                        <!-- Terminal stream content -->
+                        <div id="hardware-terminal" class="font-mono text-xs flex-1 overflow-y-auto space-y-1 bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-emerald-400 h-96 leading-relaxed">
+                            <p class="text-slate-500">// Device communication console online. Waiting for hardware scans...</p>
+                        </div>
+
+                        <!-- Info bar -->
+                        <div class="mt-4 p-3 bg-slate-900 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
+                            <p class="font-bold text-slate-300 mb-1"><i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i> Ready for Live Scan:</p>
+                            Hardware is configured. You can safely switch back to the <span class="text-primary-400 font-semibold cursor-pointer underline" onclick="switchTab('scanner')">Live Scan Monitor</span> to observe physical inputs.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Settings Tab -->
+            <section id="tab-settings" class="p-8 max-w-4xl mx-auto w-full space-y-6 hidden">
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-2xl font-extrabold text-primary-900 tracking-tight">System Settings</h2>
+                    <p class="text-sm text-slate-500 font-medium">Fine-tune shifts, scanning thresholds, organizational metadata, and database controls.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Card 1: Organizational Settings -->
+                    <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white space-y-4">
+                        <h3 class="font-bold text-primary-900 text-sm flex items-center gap-2 border-b border-slate-50 pb-2.5">
+                            <i data-lucide="building" class="w-4 h-4 text-primary-500"></i> Organization Metadata
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Organization Name</label>
+                            <input type="text" id="setting-org-name" class="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium transition-all duration-300">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Timezone / Location</label>
+                            <input type="text" id="setting-location" value="SCHOOL YEAR 2026-2027" class="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium transition-all duration-300">
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Work Shift & Attendance Rules -->
+                    <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white space-y-4">
+                        <h3 class="font-bold text-primary-900 text-sm flex items-center gap-2 border-b border-slate-50 pb-2.5">
+                            <i data-lucide="clock" class="w-4 h-4 text-emerald-500"></i> Work Shift Schedules
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Time In (Start)</label>
+                                <input type="time" id="setting-duty-start" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 outline-none text-sm font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Time Out (End)</label>
+                                <input type="time" id="setting-duty-end" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 outline-none text-sm font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Break Start (Out)</label>
+                                <input type="time" id="setting-break-start" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 outline-none text-sm font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Break End (In)</label>
+                                <input type="time" id="setting-break-end" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 outline-none text-sm font-medium">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Grace Period (Mins before late)</label>
+                                <input type="number" id="setting-grace" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary-500 outline-none text-sm font-medium">
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            Check-ins recorded past the combined start time and grace period will automatically be flagged as <span class="text-gold-500 font-bold">Late</span>.
+                        </p>
+                    </div>
+
+                    <!-- Card 3: Feedback Settings -->
+                    <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white space-y-4">
+                        <h3 class="font-bold text-primary-900 text-sm flex items-center gap-2 border-b border-slate-50 pb-2.5">
+                            <i data-lucide="volume-2" class="w-4 h-4 text-indigo-500"></i> Interactive Tonal & Voice Settings
+                        </h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="setting-enable-audio" checked class="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500">
+                                <span class="text-xs font-semibold text-slate-600">Audio feedback tones (Beep indicators)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="setting-enable-speech" checked class="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500">
+                                <span class="text-xs font-semibold text-slate-600">Interactive Greeting Voice TTS Synthesis</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Database Actions -->
+                    <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white space-y-4">
+                        <h3 class="font-bold text-primary-900 text-sm flex items-center gap-2 border-b border-slate-50 pb-2.5">
+                            <i data-lucide="database" class="w-4 h-4 text-rose-500"></i> System Storage Backup Controls
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="backupDatabase()" class="bg-white/50 backdrop-blur-sm hover:bg-white text-slate-600 border border-slate-200 text-xs font-bold py-3 rounded-xl transition-all duration-300">
+                                Backup Database
+                            </button>
+                            <button onclick="triggerRestoreUpload()" class="bg-white/50 backdrop-blur-sm hover:bg-white text-slate-600 border border-slate-200 text-xs font-bold py-3 rounded-xl transition-all duration-300">
+                                Restore Database
+                            </button>
+                            <input type="file" id="database-restore-file" onchange="restoreDatabase(event)" class="hidden">
+                        </div>
+                        <button onclick="resetSystem()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 text-xs font-bold py-2.5 rounded-xl transition">
+                            Hard Factory Reset System
+                        </button>
+                    </div>
+
+                    <!-- Card 5: Admin Credentials -->
+                    <div class="bg-white/80 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-lg shadow-slate-200/50 border border-white space-y-4 md:col-span-2">
+                        <h3 class="font-bold text-primary-900 text-sm flex items-center gap-2 border-b border-slate-50 pb-2.5">
+                            <i data-lucide="shield" class="w-4 h-4 text-amber-500"></i> Admin Access Credentials
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Admin Username</label>
+                                <input type="text" id="setting-admin-username" class="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium transition-all duration-300">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Admin Password</label>
+                                <input type="password" id="setting-admin-password" class="w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm font-medium transition-all duration-300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-slate-100">
+                    <button onclick="saveSystemSettings()" class="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-primary-500/30 text-sm transition-all duration-300 active:scale-95 border border-primary-400/20">
+                        Save Configuration
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: REGISTER / EDIT PERSONNEL -->
+    <div id="modal-personnel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white/95 backdrop-blur-3xl rounded-[2rem] border border-white w-full max-w-lg shadow-2xl overflow-hidden transition-all transform scale-95 duration-200" id="modal-content">
+            <div class="bg-gradient-to-r from-primary-900 to-primary-800 text-white p-6 flex justify-between items-center border-b border-primary-700/50">
+                <h3 class="font-extrabold text-lg" id="modal-personnel-title">Add Directory Profile</h3>
+                <button onclick="closePersonnelModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-5.5 h-5.5"></i></button>
+            </div>
+            
+            <form onsubmit="savePersonnelMember(event)" class="p-6 space-y-4">
+                <input type="hidden" id="form-personnel-idx">
+                
+                <!-- Avatar Upload Section -->
+                <div class="flex items-center space-x-4 mb-2">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0" id="form-personnel-avatar-preview-container">
+                        <i data-lucide="user" class="w-8 h-8 text-slate-400" id="form-personnel-avatar-icon"></i>
+                        <img src="" id="form-personnel-avatar-preview" class="w-full h-full object-cover hidden">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Profile Picture (Optional)</label>
+                        <input type="file" id="form-personnel-avatar-file" accept="image/*" onchange="handleAvatarUpload(event)" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 transition outline-none">
+                        <input type="hidden" id="form-personnel-avatar-base64">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Full Name</label>
+                        <input type="text" id="form-personnel-name" required placeholder="John Doe" class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Personal Code ID</label>
+                        <input type="text" id="form-personnel-id" required placeholder="EMP-2026" class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Profile Role</label>
+                        <select id="form-personnel-role" class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                            <option value="NON-TEACHING STAFF">NON-TEACHING STAFF</option>
+                            <option value="FACULTY">FACULTY</option>
+                            <option value="ADMINISTRATOR">ADMINISTRATOR</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Department / Classroom</label>
+                        <select id="form-personnel-dept" required class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                            <option value="ADMINISTRATIVE OFFICE">ADMINISTRATIVE OFFICE</option>
+                            <option value="STUDENT SERVICES">STUDENT SERVICES</option>
+                            <option value="HIGH SCHOOL">HIGH SCHOOL</option>
+                            <option value="ELEMENTARY">ELEMENTARY</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- RFID Card Link section with interactive grab tool -->
+                <div class="p-4 bg-primary-50/50 rounded-2xl border border-primary-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-extrabold text-primary-900 uppercase">RFID Proximity Card Link</label>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 text-primary-700">Hardware Linkable</span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="form-personnel-uid" required placeholder="Scan tag or type RFID Hex ID" class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                        <button type="button" onclick="triggerCardGrab()" id="btn-card-grab" class="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-primary-500/30 transition-all duration-300 active:scale-95 border border-primary-400/20">
+                            <i data-lucide="scan" class="w-4 h-4"></i> Auto-Grab Scan
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed">
+                        Manually type your scanner hex ID or click <strong class="text-primary-600">Auto-Grab</strong> then swipe a real badge. The hardware captures the UID characters automatically!
+                    </p>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closePersonnelModal()" class="px-6 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-bold transition-all duration-300 active:scale-95">Cancel</button>
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/30 transition-all duration-300 active:scale-95 border border-primary-400/20">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN LOGIN -->
+    <div id="modal-admin-login" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white/95 backdrop-blur-3xl border border-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden transition-all transform scale-95 duration-200" id="modal-admin-content">
+            <div class="bg-gradient-to-r from-primary-900 to-primary-800 text-white p-6 flex justify-between items-center border-b border-primary-700/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5"></i> Admin Access</h3>
+                <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-5.5 h-5.5"></i></button>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Username</label>
+                    <input type="text" id="admin-username" required placeholder="Enter username" class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Password</label>
+                    <input type="password" id="admin-password" required placeholder="Enter password" class="w-full px-4 py-3 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300">
+                </div>
+                <div id="admin-login-error" class="hidden text-xs font-bold text-rose-500 text-center py-1">
+                    Invalid credentials. Please try again.
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/30 transition-all duration-300 active:scale-95 border border-primary-400/20">Authenticate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMATION -->
+    <div id="modal-confirm" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white/95 backdrop-blur-3xl border border-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden transition-all transform scale-95 duration-200">
+            <div class="bg-gradient-to-r from-rose-600 to-rose-500 text-white p-6 flex justify-between items-center border-b border-rose-500/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5"></i> Confirm Action</h3>
+                <button onclick="closeConfirmModal()" class="text-rose-200 hover:text-white transition"><i data-lucide="x" class="w-5.5 h-5.5"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p id="modal-confirm-message" class="text-sm font-medium text-slate-600 leading-relaxed">Are you sure?</p>
+                <div class="pt-2 flex justify-end gap-3">
+                    <button onclick="closeConfirmModal()" class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-sm font-bold transition">Cancel</button>
+                    <button onclick="executeConfirmAction()" class="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/30 transition-all duration-300 active:scale-95 border border-rose-400/20">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION POPUP COMPONENT (Never use alerts) -->
+    <div id="app-notifier" class="fixed bottom-6 right-6 z-50 transition-all duration-300 transform translate-y-24 opacity-0 flex items-center space-x-3.5 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl max-w-sm">
+        <div id="notifier-icon-bg" class="p-2 bg-emerald-500 text-white rounded-xl">
+            <i data-lucide="check" id="notifier-icon" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <h4 id="notifier-title" class="font-bold text-sm text-white">Action Completed</h4>
+            <p id="notifier-message" class="text-xs text-slate-400 mt-0.5 leading-normal">Operational process accomplished.</p>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. AUDIO EFFECTS UTILITIES (Synthesized sounds using Web Audio API)
+           ========================================================================== */
+        let audioCtx = null;
+        
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Ensure voices are loaded into the browser registry
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // Play standard success beep
+        function playSuccessChime() {
+            if (!document.getElementById('setting-enable-audio').checked) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'triangle'; // Softer, more melodic chime
+                osc.frequency.setValueAtTime(1046.50, ctx.currentTime); // C6
+                osc.frequency.exponentialRampToValueAtTime(1567.98, ctx.currentTime + 0.1); // G6
+                
+                gain.gain.setValueAtTime(0.15, ctx.currentTime); // Slightly louder start
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4); // Longer fade out
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (err) {
+                console.log("Audio failed to initiate", err);
+            }
+        }
+
+        // Play error alarm chime
+        function playErrorChime() {
+            if (!document.getElementById('setting-enable-audio').checked) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'square'; // Harsher, more "digital error" sound
+                osc.frequency.setValueAtTime(130.81, ctx.currentTime); // C3
+                osc.frequency.exponentialRampToValueAtTime(97.99, ctx.currentTime + 0.15); // G2
+                
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            } catch (err) {
+                console.log("Audio failure", err);
+            }
+        }
+
+        // Play break notification chime
+        function playBreakChime() {
+            if (!document.getElementById('setting-enable-audio').checked) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+                osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+                
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } catch (err) {
+                console.log("Audio failure", err);
+            }
+        }
+
+        // Helper to find the most natural, human-sounding voice available in the browser
+        function getBestHumanVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            
+            // 1. Prioritize Cloud/Neural/Natural voices (Microsoft Edge & Chrome provide these for free)
+            let bestVoice = voices.find(v => 
+                v.name.includes('(Natural)') || v.name.includes('Online') || v.name.includes('Premium') || v.name.includes('Google US English')
+            );
+            
+            // 2. Fallback to known decent female OS voices
+            if (!bestVoice) {
+                const femaleKeywords = ['samantha', 'victoria', 'siri', 'fiona', 'tessa', 'ava', 'allison', 'susan'];
+                bestVoice = voices.find(voice => femaleKeywords.some(keyword => voice.name.toLowerCase().includes(keyword)));
+            }
+            
+            // 3. Absolute fallback to any English voice
+            if (!bestVoice) {
+                bestVoice = voices.find(voice => voice.lang.startsWith('en-'));
+            }
+            
+            return bestVoice || null;
+        }
+
+        // Speech synthesis Welcome function
+        function speakWelcome(message) {
+            if (!document.getElementById('setting-enable-speech').checked) return;
+            if ('speechSynthesis' in window) {
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel(); // Stop current speech to avoid overlapping
+                }
+                
+                // Execute synchronously so the browser registers this directly within the scanner's user gesture
+                const utterance = new SpeechSynthesisUtterance(message);
+                
+                const naturalVoice = getBestHumanVoice();
+                if (naturalVoice) {
+                    utterance.voice = naturalVoice;
+                }
+                
+                utterance.volume = 1.0; 
+                utterance.rate = 1.0; // Slowed down slightly from 1.05 to sound less frantic/robotic
+                utterance.pitch = 1.05; // Slight pitch up for a friendlier tone
+                
+                window._activeSpeechUtterance = utterance; // Prevent garbage collection bug from cutting off audio
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        /* ==========================================================================
+           2. STATE ENGINE & MOCK DATA INJECTION
+           ========================================================================== */
+        let database = {
+            settings: {
+                orgName: "T.R. YANGCO CATHOLIC EDUCATIONAL INSTITUTE, INC.",
+                location: "SCHOOL YEAR 2026-2027",
+                dutyStartTime: "07:30",
+                gracePeriodMinutes: 15,
+                audioBeeps: true,
+                voiceGreetings: true,
+                adminUsername: "TRYCEII",
+                adminPassword: "401282tryceii",
+                googleSheetsUrl: "https://script.google.com/macros/s/AKfycbz6H1gG-XPPq_c8MlTUhgX9odgxjEeYKmPTKNAW9k4rZEfLz3ZwH0Cw5mNblSdYmjbH/exec"
+            },
+            personnel: [],
+            logs: [],
+            syncQueue: []
+        };
+
+        // Seed some history logs representing past days
+        function seedPastLogs() {
+        }
+
+        // Initialize state from LocalStorage on mount
+        function loadDatabase() {
+            const stored = localStorage.getItem('rf_attend_db_v3');
+            if (stored) {
+                try {
+                    database = JSON.parse(stored);
+                    // Build settings validation fallbacks
+                    if (!database.settings) database.settings = {};
+                    if (!database.logs) database.logs = [];
+                    if (!database.personnel) database.personnel = [];
+                    if (!database.syncQueue) database.syncQueue = [];
+                } catch(e) {
+                    console.error("Local data compromised, resetting", e);
+                }
+            } else {
+                seedPastLogs();
+                saveDatabase();
+            }
+        }
+
+        function saveDatabase() {
+            localStorage.setItem('rf_attend_db_v3', JSON.stringify(database));
+        }
+
+        /* ==========================================================================
+           2.5 CLOUD SYNC & OFFLINE QUEUE MANAGER
+           ========================================================================== */
+        function pushToCloud(logEntry) {
+            const sheetUrl = database.settings.googleSheetsUrl;
+            if (!sheetUrl || !sheetUrl.startsWith("http")) return;
+
+            if (navigator.onLine) {
+                updateCloudIndicator(true, true);
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(logEntry)
+                }).then(() => {
+                    setTimeout(() => updateCloudIndicator(true, false), 1500);
+                }).catch(err => {
+                    console.error("Google Sheets sync failed, queuing for offline:", err);
+                    if (!database.syncQueue) database.syncQueue = [];
+                    database.syncQueue.push(logEntry);
+                    saveDatabase();
+                    updateCloudIndicator(false, false);
+                });
+            } else {
+                if (!database.syncQueue) database.syncQueue = [];
+                database.syncQueue.push(logEntry);
+                saveDatabase();
+                updateCloudIndicator(false, false);
+            }
+        }
+
+        function flushSyncQueue() {
+            if (!navigator.onLine) {
+                updateCloudIndicator(false, false);
+                return;
+            }
+            
+            updateCloudIndicator(true, false);
+
+            if (!database.settings.googleSheetsUrl || !database.syncQueue || database.syncQueue.length === 0) return;
+
+            updateCloudIndicator(true, true);
+            const entry = database.syncQueue[0];
+            
+            fetch(database.settings.googleSheetsUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(entry)
+            }).then(() => {
+                database.syncQueue.shift(); // Remove sent log
+                saveDatabase();
+                if (database.syncQueue.length > 0) {
+                    setTimeout(flushSyncQueue, 1000); // Wait 1 sec, push next
+                } else {
+                    updateCloudIndicator(true, false);
+                }
+            }).catch(() => updateCloudIndicator(false, false));
+        }
+
+        function updateCloudIndicator(isOnline, isSyncing = false) {
+            const badge = document.getElementById('badge-cloud-state');
+            const dot = document.getElementById('cloud-state-dot');
+            const text = document.getElementById('cloud-state-text');
+            if (!badge) return;
+
+            const pendingCount = database.syncQueue ? database.syncQueue.length : 0;
+
+            if (!navigator.onLine || !isOnline) {
+                badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 transition-colors";
+                dot.className = "w-1.5 h-1.5 bg-rose-500 rounded-full mr-1.5 transition-colors";
+                text.innerText = pendingCount > 0 ? `Offline (${pendingCount} pending)` : "Offline";
+            } else {
+                if (isSyncing) {
+                    badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 transition-colors";
+                    dot.className = "w-1.5 h-1.5 bg-sky-500 rounded-full mr-1.5 animate-pulse transition-colors";
+                    text.innerText = pendingCount > 0 ? `Syncing (${pendingCount})...` : "Syncing...";
+                } else {
+                    badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 transition-colors";
+                    dot.className = "w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 transition-colors";
+                    text.innerText = "Online & Synced";
+                }
+            }
+        }
+
+        window.addEventListener('online', flushSyncQueue);
+        window.addEventListener('offline', () => updateCloudIndicator(false, false));
+
+        /* ==========================================================================
+           3. UI FRAMEWORK TABS & NAVIGATION
+           ========================================================================== */
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('section[id^="tab-"]').forEach(sect => {
+                sect.classList.add('hidden');
+                sect.classList.remove('block');
+            });
+            // Show target
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('block');
+
+            // Set styling on Sidebar buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-primary-200 hover:bg-white/5 hover:text-white";
+            });
+            const activeBtn = document.getElementById(`btn-tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium text-sm text-gold-400 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] border border-white/5 relative overflow-hidden";
+            }
+
+            // Perform context-specific views loading
+            if (tabId === 'dashboard') {
+                renderDashboard();
+            } else if (tabId === 'personnel') {
+                renderPersonnelList();
+            } else if (tabId === 'logs') {
+                renderLogs();
+            }
+        }
+
+        /* Notifier Utility */
+        function triggerNotification(title, message, type = "success") {
+            const wrapper = document.getElementById('app-notifier');
+            const bg = document.getElementById('notifier-icon-bg');
+            const icon = document.getElementById('notifier-icon');
+            
+            document.getElementById('notifier-title').innerText = title;
+            document.getElementById('notifier-message').innerText = message;
+            
+            if (type === "success") {
+                bg.className = "p-2 bg-emerald-500 text-white rounded-xl";
+                icon.setAttribute('data-lucide', 'check');
+            } else {
+                bg.className = "p-2 bg-rose-500 text-white rounded-xl";
+                icon.setAttribute('data-lucide', 'alert-triangle');
+            }
+            lucide.createIcons();
+            
+            wrapper.classList.remove('translate-y-24', 'opacity-0');
+            wrapper.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                wrapper.classList.remove('translate-y-0', 'opacity-100');
+                wrapper.classList.add('translate-y-24', 'opacity-0');
+            }, 4500);
+        }
+
+        /* ==========================================================================
+           3.5 NETWORK RESTRICTION SYSTEM (IP WHITELISTING)
+           ========================================================================== */
+        // Replace this with your school's actual public IP address
+        const ALLOWED_IPS = ["192.168.1.1", "203.0.113.1"]; 
+        const ALLOW_ALL_IPS_FOR_TESTING = true; // Set to false to enforce restriction for real
+
+        async function verifyLocation() {
+            const overlay = document.getElementById('location-overlay');
+            
+            if (ALLOW_ALL_IPS_FOR_TESTING) {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 500);
+                return;
+            }
+
+            try {
+                // Fetch the client's public IP address using a free API
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                const userIP = data.ip;
+                
+                if (ALLOWED_IPS.includes(userIP)) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 500);
+                } else {
+                    showLocationError(`Access Denied. Your network IP (${userIP}) is not authorized.`);
+                }
+            } catch (error) {
+                showLocationError("Network verification failed. Please check your internet connection.");
+            }
+        }
+
+        function showLocationError(message) {
+            const overlay = document.getElementById('location-overlay');
+            overlay.innerHTML = `
+                <i data-lucide="wifi-off" class="w-16 h-16 text-rose-500 mb-4"></i>
+                <h2 class="text-2xl font-bold mb-2 text-rose-500">Network Restricted</h2>
+                <p class="text-slate-300 text-sm max-w-md">${message}</p>
+                <button onclick="location.reload()" class="mt-6 px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition">Retry Connection</button>
+            `;
+            lucide.createIcons();
+        }
+
+        /* ==========================================================================
+           4. SCANNED CARD CAPTURE & ATTENDANCE ALGORITHMS
+           ========================================================================== */
+        let cardGrabberActive = false;
+        let lastInputTime = Date.now();
+        let compositeKeyInput = "";
+
+        // Handle scanned barcode / RFID values
+        function processUIDScan(scannedUID) {
+            // Trim whitespace/caps
+            const uidClean = scannedUID.trim().toUpperCase();
+            if (!uidClean) return;
+
+            logTerminalMsg(`RFID Pulse Tag Intercepted: [${uidClean}]`);
+
+            // Check if user is currently mapping card in Modal Dialog
+            if (cardGrabberActive) {
+                document.getElementById('form-personnel-uid').value = uidClean;
+                disableCardGrab();
+                playSuccessChime();
+                triggerNotification("RFID Linked", `Successfully grabbed Card UID: ${uidClean}`, "success");
+                return;
+            }
+
+            // Verify if card exists in organization database
+            const person = database.personnel.find(p => p.uid.toUpperCase() === uidClean);
+            
+            if (!person) {
+                // Flash Scanner Red
+                animateScannerFlash('error');
+                playErrorChime();
+                updateScannerFeedbackCard(null, uidClean);
+                speakWelcome("Access Denied. Unknown keycard.");
+                return;
+            }
+
+            // Register Transaction Attendance Time
+            const now = new Date();
+            const todayDateStr = now.toISOString().split('T')[0];
+            
+            // Check last check-in log of this user TODAY to determine if check-in or out
+            const dailyLogs = database.logs.filter(l => l.uid === person.uid && l.timestamp.startsWith(todayDateStr));
+            let finalEvent = "Check-In";
+            
+            if (dailyLogs.length > 0) {
+                // Already checked-in today, so this becomes check-out
+                const lastLog = dailyLogs[dailyLogs.length - 1];
+                if (lastLog.event === "Check-In" || lastLog.event === "Late Check-In") {
+                    finalEvent = "Check-Out";
+                } else {
+                    finalEvent = "Check-In";
+                }
+            }
+
+            // Detect Late arrival threshold for Check-In
+            if (finalEvent === "Check-In") {
+                const [startHour, startMin] = database.settings.dutyStartTime.split(':').map(Number);
+                const limitMinutes = (startHour * 60) + startMin + Number(database.settings.gracePeriodMinutes);
+                
+                const scanMinutes = (now.getHours() * 60) + now.getMinutes();
+                if (scanMinutes > limitMinutes) {
+                    finalEvent = "Late Check-In";
+                }
+            }
+
+            // Save log payload
+            const logEntry = {
+                uid: person.uid,
+                name: person.name,
+                dept: person.dept,
+                role: person.role,
+                timestamp: now.toISOString(),
+                event: finalEvent
+            };
+            
+            database.logs.push(logEntry);
+            saveDatabase();
+
+            // --- GOOGLE SHEETS LIVE SYNC WITH OFFLINE QUEUE ---
+            pushToCloud(logEntry);
+
+            // Perform Scanner UI visual alerts
+            if (finalEvent === "Break Start" || finalEvent === "Break End") {
+                animateScannerFlash('break');
+                playBreakChime();
+            } else {
+                animateScannerFlash('success');
+                playSuccessChime();
+            }
+            updateScannerFeedbackCard(person, uidClean, logEntry);
+            
+            // Text to speech dynamic conversational greeting
+            const hour = now.getHours();
+            let dayGreeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+            if (finalEvent === "Check-In") {
+                speakWelcome(`${dayGreeting}, ${person.name}. Welcome!`);
+            } else if (finalEvent === "Late Check-In") {
+                speakWelcome(`${dayGreeting}, ${person.name}. You are checked in late.`);
+            } else if (finalEvent === "Check-Out") {
+                speakWelcome(`Thank you, ${person.name}. Goodbye, and have a safe way home.`);
+            } else if (finalEvent === "Break Start") {
+                speakWelcome(`Enjoy your break, ${person.name}.`);
+            } else if (finalEvent === "Break End") {
+                speakWelcome(`Welcome back, ${person.name}.`);
+            }
+
+            // Sync with dashboard counters if opened
+            renderDashboard();
+        }
+
+        // Auto flash visual effect for physical body
+        function animateScannerFlash(status) {
+            const body = document.getElementById('visual-scanner-body');
+            const led = document.getElementById('visual-scanner-led');
+            const statusTxt = document.getElementById('visual-scanner-status-text');
+
+            if (status === 'success') {
+                body.className = "relative w-10 h-10 bg-emerald-900 rounded-full border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center transition-all duration-150";
+                led.className = "absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_#34d399] border-2 border-emerald-900";
+                statusTxt.innerText = "ACCEPTED";
+                statusTxt.className = "text-[9px] font-bold tracking-widest text-emerald-400 uppercase leading-none mb-0.5";
+            } else if (status === 'break') {
+                body.className = "relative w-10 h-10 bg-amber-900 rounded-full border-2 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex items-center justify-center transition-all duration-150";
+                led.className = "absolute top-0 right-0 w-2.5 h-2.5 bg-amber-400 rounded-full shadow-[0_0_10px_#fbbf24] border-2 border-amber-900";
+                statusTxt.innerText = "BREAK TIME";
+                statusTxt.className = "text-[9px] font-bold tracking-widest text-amber-400 uppercase leading-none mb-0.5";
+            } else {
+                body.className = "relative w-10 h-10 bg-rose-900 rounded-full border-2 border-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center justify-center transition-all duration-150";
+                led.className = "absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full shadow-[0_0_10px_#f87171] border-2 border-rose-900";
+                statusTxt.innerText = "DENIED";
+                statusTxt.className = "text-[9px] font-bold tracking-widest text-rose-400 uppercase leading-none mb-0.5";
+            }
+
+            setTimeout(() => {
+                body.className = "relative w-10 h-10 bg-slate-700 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center transition-all duration-300";
+                led.className = "absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e] transition-all duration-300 border-2 border-slate-700";
+                statusTxt.innerText = "ONLINE";
+                statusTxt.className = "text-[9px] font-bold tracking-widest text-emerald-400 uppercase leading-none mb-0.5";
+            }, 1800);
+        }
+
+        let resetScannerTimeout = null;
+
+        // Live card data update details
+        function updateScannerFeedbackCard(person, uid, logData) {
+            const card = document.getElementById('live-scan-card');
+            const photoBorder = document.getElementById('live-scan-photo-border');
+            const photo = document.getElementById('live-scan-photo');
+            const badge = document.getElementById('live-scan-badge');
+            
+            if (!person) {
+                // Card not found error layout
+                card.className = "bg-gradient-to-br from-rose-950 via-rose-900 to-slate-900 text-white rounded-[2rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden transition-all duration-500 transform scale-102 border border-rose-800/50 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full max-w-5xl";
+                badge.className = "px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-rose-500 text-white shadow-lg shadow-rose-500/40 uppercase tracking-widest inline-block";
+                badge.innerText = "UNKNOWN KEYCARD";
+                
+                photoBorder.className = "shrink-0 w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-rose-500/40 p-1.5 lg:p-2 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-rose-500/50 shadow-xl";
+                photo.innerHTML = `<i data-lucide="user-x" class="w-20 h-20 lg:w-28 lg:h-28 text-rose-400"></i>`;
+                
+                document.getElementById('live-scan-name').innerText = "Unknown Card";
+                document.getElementById('live-scan-role').innerText = "NO REGISTERED USER";
+                document.getElementById('live-scan-id').innerText = "N/A";
+                document.getElementById('live-scan-dept').innerText = "N/A";
+                document.getElementById('live-scan-uid').innerText = uid;
+                document.getElementById('live-scan-time').innerText = new Date().toLocaleTimeString();
+            } else {
+                // Person detected checkin/checkout styling
+                const isCheckIn = logData.event.includes("Check-In");
+                const isLate = logData.event === "Late Check-In";
+                
+                const baseCardClass = "text-white rounded-[2rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden transition-all duration-500 transform scale-100 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full max-w-5xl animate-gradient-pan";
+                
+                if (isLate) {
+                    card.className = `${baseCardClass} bg-gradient-to-br from-amber-900 via-slate-900 to-gold-900 border border-gold-700/50`;
+                    badge.className = "px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-gold-500 text-primary-950 shadow-lg shadow-gold-500/40 uppercase tracking-widest inline-block";
+                    badge.innerText = "Check-In (Late)";
+                    photoBorder.className = "shrink-0 w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-gold-500/80 p-1.5 lg:p-2 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-gold-500/50 shadow-xl";
+                } else if (isCheckIn) {
+                    card.className = `${baseCardClass} bg-gradient-to-br from-emerald-900 via-slate-900 to-primary-900 border border-emerald-700/50`;
+                    badge.className = "px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 uppercase tracking-widest inline-block";
+                    badge.innerText = "Check-In Approved";
+                    photoBorder.className = "shrink-0 w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-emerald-500/80 p-1.5 lg:p-2 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-emerald-500/50 shadow-xl";
+                } else {
+                    card.className = `${baseCardClass} bg-gradient-to-br from-sky-900 via-slate-900 to-blue-900 border border-sky-700/50`;
+                    badge.className = "px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-sky-500 text-white shadow-lg shadow-sky-500/40 uppercase tracking-widest inline-block";
+                    badge.innerText = "Checked-Out";
+                    photoBorder.className = "shrink-0 w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-sky-500/80 p-1.5 lg:p-2 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-sky-500/50 shadow-xl";
+                }
+                
+                // Force profile picture bounce animation
+                photoBorder.classList.remove('animate-pop-bounce');
+                void photoBorder.offsetWidth; // Trigger DOM reflow to restart animation reliably
+                photoBorder.classList.add('animate-pop-bounce');
+
+                if (person.avatar) {
+                    photo.innerHTML = `<img src="${person.avatar}" class="w-full h-full object-cover">`;
+                } else {
+                    photo.innerHTML = `<i data-lucide="user" class="w-20 h-20 lg:w-28 lg:h-28 text-white/50"></i>`;
+                }
+                
+                document.getElementById('live-scan-name').innerText = person.name;
+                document.getElementById('live-scan-role').innerText = person.role;
+                document.getElementById('live-scan-id').innerText = person.id;
+                document.getElementById('live-scan-dept').innerText = person.dept;
+                document.getElementById('live-scan-uid').innerText = person.uid;
+                document.getElementById('live-scan-time').innerText = new Date(logData.timestamp).toLocaleTimeString();
+            }
+            
+            lucide.createIcons();
+
+            // Reset to standby mode after 5 seconds
+            clearTimeout(resetScannerTimeout);
+            resetScannerTimeout = setTimeout(() => {
+                resetScannerFeedbackCard();
+            }, 5000);
+        }
+
+        // Revert UI to default state
+        function resetScannerFeedbackCard() {
+            const card = document.getElementById('live-scan-card');
+            const photoBorder = document.getElementById('live-scan-photo-border');
+            const photo = document.getElementById('live-scan-photo');
+            const badge = document.getElementById('live-scan-badge');
+
+            card.className = "bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-[2rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden transition-all duration-500 transform scale-100 border border-slate-700/50 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full max-w-5xl";
+            badge.className = "px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold bg-black/40 text-slate-200 backdrop-blur-md uppercase tracking-widest inline-block border border-white/10";
+            badge.innerText = "Awaiting Card Tap";
+            
+            photoBorder.className = "shrink-0 w-40 h-40 lg:w-56 lg:h-56 rounded-full border-[4px] lg:border-[6px] border-white/10 p-1.5 lg:p-2 flex items-center justify-center bg-black/20 transition-colors duration-500 shadow-xl";
+            photo.innerHTML = `<i data-lucide="user" class="w-20 h-20 lg:w-28 lg:h-28 text-white/40"></i>`;
+            
+            document.getElementById('live-scan-name').innerText = "System Terminal";
+            document.getElementById('live-scan-role').innerText = "Standby Mode";
+            document.getElementById('live-scan-id').innerText = "---------";
+            document.getElementById('live-scan-dept').innerText = "---------";
+            document.getElementById('live-scan-uid').innerText = "---------";
+            document.getElementById('live-scan-time').innerText = "--:--:--";
+            
+            lucide.createIcons();
+        }
+
+        /* Keyboard Wedge Interceptor Parser */
+        window.addEventListener('keydown', (e) => {
+            const scannerTabActive = document.getElementById('tab-scanner').classList.contains('block');
+            const adminModalOpen = !document.getElementById('modal-admin-login').classList.contains('hidden');
+            const activeTag = document.activeElement.tagName;
+            
+            // Guardrail: Ignore typing in input boxes or textareas
+            const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+            
+            if (isInput && !cardGrabberActive) {
+                return;
+            }
+            
+            // Only process globally if we are on the scanner tab, OR if actively grabbing a card
+            if (!scannerTabActive && !cardGrabberActive) {
+                return;
+            }
+            
+            // Ignore if admin login modal is open
+            if (adminModalOpen) {
+                return;
+            }
+
+            const now = Date.now();
+            
+            // Clean/flush input builder if typing speed was slow (raised to 120ms for slower hardware scanners)
+            if (now - lastInputTime > 120) {
+                compositeKeyInput = "";
+            }
+            lastInputTime = now;
+
+            // Handle carriage return (Standard card scanners append "Enter" on final index)
+            if (e.key === 'Enter') {
+                if (compositeKeyInput.length >= 3) {
+                    processUIDScan(compositeKeyInput);
+                }
+                compositeKeyInput = "";
+            } else if (e.key.length === 1) {
+                compositeKeyInput += e.key;
+            }
+        });
+
+        /* ==========================================================================
+           5. WEB SERIAL API METHOD B INTEGRATOR
+           ========================================================================== */
+        let serialPort = null;
+        let serialReader = null;
+        let serialActive = false;
+
+        async function toggleWebSerial() {
+            if (!("serial" in navigator)) {
+                triggerNotification("Unsupported Browser", "Web Serial is only supported on Chrome, Edge, and Opera.", "error");
+                return;
+            }
+
+            if (serialActive) {
+                // Terminate Serial Reader Connection
+                try {
+                    serialActive = false;
+                    if (serialReader) {
+                        await serialReader.cancel();
+                        serialReader.releaseLock();
+                    }
+                    if (serialPort) {
+                        await serialPort.close();
+                    }
+                    logTerminalMsg("Hardware Serial Port Closed.");
+                    document.getElementById('btn-webserial-connect').innerHTML = `<i data-lucide="cable" class="w-4 h-4"></i> Establish Serial Connection`;
+                    document.getElementById('badge-connection-state').className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/10 text-gold-500";
+                    document.getElementById('badge-connection-state').innerHTML = `<span class="w-1.5 h-1.5 bg-gold-500 rounded-full mr-1.5 animate-pulse"></span>Keyboard Wedge`;
+                    lucide.createIcons();
+                } catch (e) {
+                    logTerminalMsg(`Error on exit: ${e.message}`);
+                }
+                return;
+            }
+
+            try {
+                // Open hardware port selection dialog box
+                serialPort = await navigator.serial.requestPort();
+                await serialPort.open({ baudRate: 9600 });
+                serialActive = true;
+                
+                logTerminalMsg("COM Port Connection Succeeded. Speed set to 9600 baud.");
+                document.getElementById('btn-webserial-connect').className = "flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition";
+                document.getElementById('btn-webserial-connect').innerHTML = `<i data-lucide="power" class="w-4 h-4"></i> Disconnect COM Serial`;
+                document.getElementById('badge-connection-state').className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500";
+                document.getElementById('badge-connection-state').innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>COM Port Connected`;
+                lucide.createIcons();
+
+                readSerialDataLoop();
+            } catch (err) {
+                logTerminalMsg(`Port Selection Rejected: ${err.message}`);
+                triggerNotification("Hardware Link Denied", "Couldn't secure serial device binding.", "error");
+            }
+        }
+
+        async function readSerialDataLoop() {
+            const textDecoder = new TextDecoderStream();
+            const readableStreamClosed = serialPort.readable.pipeTo(textDecoder.writable);
+            const reader = textDecoder.readable.getReader();
+            serialReader = reader;
+            
+            let bufferString = "";
+
+            try {
+                while (serialActive) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (value) {
+                        bufferString += value;
+                        // Parse buffers ending with newline characters (Serial.println)
+                        if (bufferString.includes('\n')) {
+                            const lines = bufferString.split('\n');
+                            // Extract last completed segment
+                            for (let i = 0; i < lines.length - 1; i++) {
+                                const uidVal = lines[i].trim();
+                                if (uidVal) {
+                                    processUIDScan(uidVal);
+                                }
+                            }
+                            bufferString = lines[lines.length - 1];
+                        }
+                    }
+                }
+            } catch (error) {
+                logTerminalMsg(`Serial read stream error: ${error.message}`);
+            } finally {
+                reader.releaseLock();
+            }
+        }
+
+        function logTerminalMsg(text) {
+            const term = document.getElementById('hardware-terminal');
+            const p = document.createElement('p');
+            p.className = "mb-1";
+            p.innerHTML = `<span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+            
+            // Apply active search filter to incoming messages
+            const query = document.getElementById('terminal-search-input').value.toLowerCase();
+            if (query && !p.textContent.toLowerCase().includes(query)) {
+                p.style.display = "none";
+            }
+
+            term.appendChild(p);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function clearTerminalLogs() {
+            document.getElementById('hardware-terminal').innerHTML = `<p class="text-slate-500">// Terminal console logs cleared.</p>`;
+            document.getElementById('terminal-search-input').value = "";
+        }
+
+        function filterTerminalLogs() {
+            const query = document.getElementById('terminal-search-input').value.toLowerCase();
+            const terminal = document.getElementById('hardware-terminal');
+            const lines = terminal.getElementsByTagName('p');
+            
+            for (let p of lines) {
+                if (p.textContent.toLowerCase().includes(query)) {
+                    p.style.display = "";
+                } else {
+                    p.style.display = "none";
+                }
+            }
+        }
+
+        /* ==========================================================================
+           6. CARD GRAB SYSTEM FOR DIRECTORY REGISTRATION
+           ========================================================================== */
+        function triggerCardGrab() {
+            cardGrabberActive = true;
+            const btn = document.getElementById('btn-card-grab');
+            btn.className = "bg-gold-500 hover:bg-gold-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-gold-500/15 animate-pulse";
+            btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Tap Physical Card Now`;
+            lucide.createIcons();
+            
+            // Timeout grabber after 15 seconds to prevent memory blocks
+            setTimeout(() => {
+                if (cardGrabberActive) {
+                    disableCardGrab();
+                    triggerNotification("Capture Timeout", "Interactive auto card link mapping timed out.", "error");
+                }
+            }, 15000);
+        }
+
+        function disableCardGrab() {
+            cardGrabberActive = false;
+            const btn = document.getElementById('btn-card-grab');
+            if (btn) {
+                btn.className = "bg-primary-600 hover:bg-primary-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-primary-600/10 transition";
+                btn.innerHTML = `<i data-lucide="scan" class="w-4 h-4"></i> Auto-Grab Scan`;
+                lucide.createIcons();
+            }
+        }
+
+        /* ==========================================================================
+           7. DASHBOARD DATA AGGREGATION & CHARTS
+           ========================================================================== */
+        let weeklyChartInstance = null;
+
+        function renderDashboard() {
+            // Apply setting text overrides
+            document.getElementById('dashboard-org-title').innerText = database.settings.orgName;
+            document.getElementById('dashboard-org-subtitle').innerText = database.settings.location;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            const logsToday = database.logs.filter(l => l.timestamp.startsWith(todayStr));
+            
+            // Unique profiles scanned present today
+            const uniquePresents = new Set();
+            let lateCounter = 0;
+            
+            logsToday.forEach(l => {
+                if (l.event.includes("Check-In")) {
+                    uniquePresents.add(l.uid);
+                    if (l.event === "Late Check-In") lateCounter++;
+                }
+            });
+
+            const totalRegisteredCount = database.personnel.length;
+            const presentCount = uniquePresents.size;
+            const absentCount = Math.max(0, totalRegisteredCount - presentCount);
+
+            document.getElementById('stat-total-count').innerText = totalRegisteredCount;
+            document.getElementById('stat-present-count').innerText = presentCount;
+            document.getElementById('stat-absent-count').innerText = absentCount;
+            document.getElementById('stat-late-count').innerText = lateCounter;
+
+            // Render Scan Activity Table on dashboard (last 6 transactions)
+            const recentScans = [...database.logs].reverse().slice(0, 6);
+            const scanBody = document.getElementById('dashboard-recent-scans-tbody');
+            
+            if (recentScans.length === 0) {
+                scanBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No scanner events logged yet. Tap physical cards or use the testing panel to start!</td></tr>`;
+            } else {
+                scanBody.innerHTML = recentScans.map(s => {
+                    let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                    if (s.event === "Late Check-In") badgeClass = "bg-gold-50 text-gold-700 border-gold-100";
+                    if (s.event === "Check-Out") badgeClass = "bg-sky-50 text-sky-700 border-sky-100";
+                    
+                    return `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition">
+                            <td class="py-3.5 pl-2 font-mono text-xs text-slate-400">${new Date(s.timestamp).toLocaleTimeString()}</td>
+                            <td class="py-3.5 font-semibold text-primary-900">${s.name}</td>
+                            <td class="py-3.5 font-mono text-xs text-slate-400">${s.uid}</td>
+                            <td class="py-3.5 text-xs text-slate-500">${s.dept}</td>
+                            <td class="py-3.5 text-right pr-2">
+                                <span class="inline-flex px-2.5 py-1 border rounded-lg text-xs font-bold ${badgeClass}">${s.event}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Render department-wise list status distributions
+            renderDepartmentDistributions();
+
+            // Populate weekly attendance graph
+            updateAttendanceGraph();
+        }
+
+        function renderDepartmentDistributions() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const logsToday = database.logs.filter(l => l.timestamp.startsWith(todayStr));
+            
+            // Gather department metrics
+            const deptStats = {};
+            
+            database.personnel.forEach(p => {
+                if (!deptStats[p.dept]) {
+                    deptStats[p.dept] = { total: 0, present: 0 };
+                }
+                deptStats[p.dept].total++;
+                
+                // Checked in today?
+                const presentToday = logsToday.some(l => l.uid === p.uid && l.event.includes("Check-In"));
+                if (presentToday) {
+                    deptStats[p.dept].present++;
+                }
+            });
+
+            const listEl = document.getElementById('dept-status-list');
+            const keys = Object.keys(deptStats);
+
+            if (keys.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-slate-400 py-12 text-sm">No departments registered.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = keys.map(k => {
+                const stat = deptStats[k];
+                const pct = stat.total > 0 ? Math.round((stat.present / stat.total) * 100) : 0;
+                
+                return `
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-700">${k}</span>
+                            <span class="text-slate-500">${stat.present}/${stat.total} Present (${pct}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2">
+                            <div class="bg-primary-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateAttendanceGraph() {
+            const ctx = document.getElementById('weeklyAttendanceChart').getContext('2d');
+            
+            // Map labels of last 5 days
+            const labels = [];
+            const presentData = [];
+            const lateData = [];
+
+            for (let i = 4; i >= 0; i--) {
+                const date = new Date(Date.now() - (i * 86400000));
+                const dStr = date.toISOString().split('T')[0];
+                
+                const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+                labels.push(weekday);
+
+                const dayLogs = database.logs.filter(l => l.timestamp.startsWith(dStr));
+                
+                const dayPresents = new Set();
+                let dayLates = 0;
+                
+                dayLogs.forEach(l => {
+                    if (l.event === "Check-In") dayPresents.add(l.uid);
+                    if (l.event === "Late Check-In") {
+                        dayPresents.add(l.uid);
+                        dayLates++;
+                    }
+                });
+
+                presentData.push(dayPresents.size);
+                lateData.push(dayLates);
+            }
+
+            if (weeklyChartInstance) {
+                weeklyChartInstance.destroy();
+            }
+
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'On-Time Scans',
+                            data: presentData,
+                            backgroundColor: '#228B22',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Late Arrivals',
+                            data: lateData,
+                            backgroundColor: '#FFD700',
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        /* ==========================================================================
+           8. PERSONNEL PROFILES DIRECTORY SERVICES
+           ========================================================================== */
+        function renderPersonnelList() {
+            const tbody = document.getElementById('personnel-table-tbody');
+            const searchVal = document.getElementById('search-personnel-input').value.toLowerCase();
+            const roleFilter = document.getElementById('filter-personnel-role').value;
+            const deptFilter = document.getElementById('filter-personnel-dept').value;
+
+            // Load unique departments list filter dropdown values dynamically
+            const depts = new Set(database.personnel.map(p => p.dept));
+            const filterDeptSelect = document.getElementById('filter-personnel-dept');
+            const curVal = filterDeptSelect.value;
+            
+            filterDeptSelect.innerHTML = `<option value="All">All Depts</option>` + 
+                Array.from(depts).map(d => `<option value="${d}">${d}</option>`).join('');
+            filterDeptSelect.value = curVal;
+
+            const filtered = database.personnel.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchVal) || 
+                                      p.dept.toLowerCase().includes(searchVal) || 
+                                      p.id.toLowerCase().includes(searchVal) || 
+                                      p.uid.toLowerCase().includes(searchVal);
+                const matchesRole = roleFilter === "All" || p.role === roleFilter;
+                const matchesDept = deptFilter === "All" || p.dept === deptFilter;
+                return matchesSearch && matchesRole && matchesDept;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-slate-400">No personnel profiles correspond to your query.</td></tr>`;
+                return;
+            }
+
+            // Group filtered results by department
+            const grouped = {};
+            filtered.forEach(p => {
+                if (!grouped[p.dept]) grouped[p.dept] = [];
+                grouped[p.dept].push(p);
+            });
+
+            // Sort departments alphabetically
+            const sortedDepts = Object.keys(grouped).sort();
+            let htmlOutput = "";
+
+            sortedDepts.forEach(dept => {
+                // Add Department Header Row
+                htmlOutput += `
+                    <tr class="bg-slate-50 border-y border-slate-200">
+                        <td colspan="5" class="py-2.5 pl-6 font-extrabold text-xs text-slate-500 uppercase tracking-widest shadow-sm">
+                            <i data-lucide="building" class="w-3.5 h-3.5 inline mr-1.5 align-text-bottom text-primary-500"></i>${dept}
+                        </td>
+                    </tr>
+                `;
+                
+                // Add rows for this department
+                htmlOutput += grouped[dept].map(p => {
+                    const origIdx = database.personnel.indexOf(p); // Fixes bug: ensures edit/delete always targets correct DB row, regardless of filter state
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4 pl-6 flex items-center space-x-3.5">
+                                <div class="w-10 h-10 bg-slate-100 rounded-full flex shrink-0 items-center justify-center text-slate-400 shadow-inner border border-slate-200 overflow-hidden">
+                                    ${p.avatar ? `<img src="${p.avatar}" class="w-full h-full object-cover">` : `<i data-lucide="user" class="w-5 h-5"></i>`}
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-primary-900 text-sm">${p.name}</span>
+                                    <span class="block text-slate-400 text-xs font-semibold">${p.id}</span>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <span class="inline-flex px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 border border-slate-200">${p.role}</span>
+                            </td>
+                            <td class="py-4 text-slate-500 font-semibold text-xs uppercase">${p.dept}</td>
+                            <td class="py-4 font-mono text-xs font-semibold text-primary-600">${p.uid}</td>
+                            <td class="py-4 text-right pr-6 space-x-1.5">
+                                <button onclick="editPersonnelMember(${origIdx})" class="p-2 border border-slate-100 hover:border-slate-300 rounded-lg text-slate-500 hover:text-slate-800 bg-white transition inline-flex items-center">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deletePersonnelMember(${origIdx})" class="p-2 border border-rose-100 hover:bg-rose-50 rounded-lg text-rose-500 hover:text-rose-700 bg-white transition inline-flex items-center">
+                                    <i data-lucide="trash" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            });
+
+            tbody.innerHTML = htmlOutput;
+
+            lucide.createIcons();
+        }
+
+        function filterPersonnel() {
+            renderPersonnelList();
+        }
+
+        function openPersonnelModal() {
+            document.getElementById('modal-personnel-title').innerText = "Add Directory Profile";
+            document.getElementById('form-personnel-idx').value = "";
+            document.getElementById('form-personnel-name').value = "";
+            document.getElementById('form-personnel-id').value = "";
+            document.getElementById('form-personnel-role').value = "NON-TEACHING STAFF";
+            document.getElementById('form-personnel-dept').value = "ADMINISTRATIVE OFFICE";
+            document.getElementById('form-personnel-uid').value = "";
+            
+            document.getElementById('form-personnel-avatar-file').value = "";
+            document.getElementById('form-personnel-avatar-base64').value = "";
+            document.getElementById('form-personnel-avatar-icon').classList.remove('hidden');
+            document.getElementById('form-personnel-avatar-preview').classList.add('hidden');
+            document.getElementById('form-personnel-avatar-preview').src = "";
+            
+            document.getElementById('modal-personnel').classList.remove('hidden');
+        }
+
+        function closePersonnelModal() {
+            document.getElementById('modal-personnel').classList.add('hidden');
+            disableCardGrab();
+        }
+
+        function editPersonnelMember(idx) {
+            const p = database.personnel[idx];
+            document.getElementById('modal-personnel-title').innerText = "Modify Directory Profile";
+            document.getElementById('form-personnel-idx').value = idx;
+            document.getElementById('form-personnel-name').value = p.name;
+            document.getElementById('form-personnel-id').value = p.id;
+            document.getElementById('form-personnel-role').value = p.role;
+            document.getElementById('form-personnel-dept').value = p.dept;
+            document.getElementById('form-personnel-uid').value = p.uid;
+            
+            if (p.avatar) {
+                document.getElementById('form-personnel-avatar-base64').value = p.avatar;
+                document.getElementById('form-personnel-avatar-icon').classList.add('hidden');
+                document.getElementById('form-personnel-avatar-preview').classList.remove('hidden');
+                document.getElementById('form-personnel-avatar-preview').src = p.avatar;
+            } else {
+                document.getElementById('form-personnel-avatar-file').value = "";
+                document.getElementById('form-personnel-avatar-base64').value = "";
+                document.getElementById('form-personnel-avatar-icon').classList.remove('hidden');
+                document.getElementById('form-personnel-avatar-preview').classList.add('hidden');
+                document.getElementById('form-personnel-avatar-preview').src = "";
+            }
+
+            document.getElementById('modal-personnel').classList.remove('hidden');
+        }
+        
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Downscale the image to prevent LocalStorage limits (max 150x150)
+                    const canvas = document.createElement('canvas');
+                    const MAX_DIMENSION = 150;
+                    let width = img.width;
+                    let height = img.height;
+                    const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+                    
+                    canvas.width = width * ratio;
+                    canvas.height = height * ratio;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const b64 = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('form-personnel-avatar-base64').value = b64;
+                    document.getElementById('form-personnel-avatar-icon').classList.add('hidden');
+                    const preview = document.getElementById('form-personnel-avatar-preview');
+                    preview.src = b64;
+                    preview.classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function savePersonnelMember(e) {
+            e.preventDefault();
+            const idxStr = document.getElementById('form-personnel-idx').value;
+            const name = document.getElementById('form-personnel-name').value;
+            const id = document.getElementById('form-personnel-id').value;
+            const role = document.getElementById('form-personnel-role').value;
+            const dept = document.getElementById('form-personnel-dept').value;
+            const uid = document.getElementById('form-personnel-uid').value.trim().toUpperCase();
+            const avatar = document.getElementById('form-personnel-avatar-base64').value;
+
+            // Check if UID is already linked to another person to prevent conflicts
+            const dup = database.personnel.find((p, i) => p.uid.toUpperCase() === uid && i.toString() !== idxStr);
+            if (dup) {
+                triggerNotification("RFID In Use", `UID is already assigned to ${dup.name}`, "error");
+                return;
+            }
+
+            if (idxStr === "") {
+                // Insert New
+                database.personnel.push({ id, name, role, dept, uid, avatar });
+                triggerNotification("Member Created", "A new profile was appended to directory.", "success");
+            } else {
+                // Edit existing
+                const idx = parseInt(idxStr);
+                database.personnel[idx].name = name;
+                database.personnel[idx].id = id;
+                database.personnel[idx].role = role;
+                database.personnel[idx].dept = dept;
+                database.personnel[idx].uid = uid;
+                database.personnel[idx].avatar = avatar;
+                triggerNotification("Member Updated", "Profile modification complete.", "success");
+            }
+
+            saveDatabase();
+            closePersonnelModal();
+            renderPersonnelList();
+        }
+
+        function deletePersonnelMember(idx) {
+            const name = database.personnel[idx].name;
+            openConfirmModal(`Are you absolutely sure you want to delete ${name}'s directory profile?`, () => {
+                database.personnel.splice(idx, 1);
+                saveDatabase();
+                renderPersonnelList();
+                triggerNotification("Profile Deleted", "Member deleted from directory registry.", "success");
+            });
+        }
+
+        function downloadCSVTemplate() {
+            const csvContent = "ID,Name,Role,Department,UID\r\nEMP-1001,John Doe,NON-TEACHING STAFF,ADMINISTRATIVE OFFICE,1A2B3C4D\r\nSTU-2001,Jane Smith,FACULTY,HIGH SCHOOL,9F8E7D6C\r\n";
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "personnel_import_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function triggerCSVImport() {
+            document.getElementById('csv-upload-input').click();
+        }
+
+        function processCSVImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(l => l.trim().length > 0);
+                    if (lines.length === 0) return;
+
+                    let importedCount = 0;
+                    let skippedCount = 0;
+
+                    // Skip the first row if it looks like a header (e.g. contains "name" or "id")
+                    let startIndex = (lines[0].toLowerCase().includes('name') || lines[0].toLowerCase().includes('id')) ? 1 : 0;
+
+                    for (let i = startIndex; i < lines.length; i++) {
+                        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                        // Expected CSV format: ID, Name, Role, Department, UID
+                        if (cols.length >= 5) {
+                            const [id, name, role, dept, uid] = cols;
+                            const cleanUid = uid.toUpperCase();
+
+                            const dup = database.personnel.find(p => p.uid.toUpperCase() === cleanUid);
+                            if (!dup) {
+                                database.personnel.push({ id, name, role, dept, uid: cleanUid });
+                                importedCount++;
+                            } else { skippedCount++; }
+                        } else { skippedCount++; }
+                    }
+
+                    saveDatabase();
+                    renderPersonnelList();
+                    triggerNotification("CSV Import Complete", `Successfully imported ${importedCount} profiles. Skipped ${skippedCount} duplicates/invalid rows.`, "success");
+                } catch (err) {
+                    triggerNotification("Import Failed", "Failed to parse the CSV file.", "error");
+                }
+                event.target.value = ''; // Reset input to allow re-uploading the same file if needed
+            };
+            reader.readAsText(file);
+        }
+
+        /* ==========================================================================
+           9. LOGS MANAGEMENT PANEL & EXPORTERS
+           ========================================================================== */
+        function renderLogs() {
+            const tbody = document.getElementById('logs-table-tbody');
+            const search = document.getElementById('log-search').value.toLowerCase();
+            const dateVal = document.getElementById('log-date').value;
+            const statusVal = document.getElementById('log-status').value;
+            const deptVal = document.getElementById('log-dept').value;
+
+            // Load filter dynamic dropdowns
+            const depts = new Set(database.personnel.map(p => p.dept));
+            const select = document.getElementById('log-dept');
+            const curVal = select.value;
+            select.innerHTML = `<option value="All">All Departments</option>` + 
+                Array.from(depts).map(d => `<option value="${d}">${d}</option>`).join('');
+            select.value = curVal;
+
+            const filteredLogs = database.logs.filter(l => {
+                const matchesSearch = l.name.toLowerCase().includes(search) || l.uid.toLowerCase().includes(search);
+                const matchesDate = !dateVal || l.timestamp.startsWith(dateVal);
+                const matchesStatus = statusVal === "All" || l.event === statusVal;
+                const matchesDept = deptVal === "All" || l.dept === deptVal;
+
+                return matchesSearch && matchesDate && matchesStatus && matchesDept;
+            });
+
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-slate-400">No scanner transaction logs match your active parameters.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredLogs.map(l => {
+                let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                if (l.event === "Late Check-In") badgeClass = "bg-gold-50 text-gold-700 border-gold-100";
+                if (l.event === "Check-Out") badgeClass = "bg-sky-50 text-sky-700 border-sky-100";
+
+                const dateObj = new Date(l.timestamp);
+                const formattedDate = dateObj.toLocaleDateString() + " - " + dateObj.toLocaleTimeString();
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 pl-6 font-mono text-xs text-slate-500">${formattedDate}</td>
+                        <td class="py-3.5 font-bold text-primary-900">${l.name}</td>
+                        <td class="py-3.5 text-xs text-slate-500">${l.dept} (${l.role})</td>
+                        <td class="py-3.5 font-mono text-xs text-primary-600">${l.uid}</td>
+                        <td class="py-3.5 text-right pr-6">
+                            <span class="inline-flex px-2.5 py-1 border rounded-lg text-xs font-bold ${badgeClass}">${l.event}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterLogs() {
+            renderLogs();
+        }
+
+        function clearAllLogs() {
+            openConfirmModal("DANGER: Are you sure you want to wipe all transaction logs? This action is irreversible.", () => {
+                database.logs = [];
+                saveDatabase();
+                renderLogs();
+                triggerNotification("Logs Cleaned", "Attendance logging index cleared successfully.", "success");
+            });
+        }
+
+        function exportLogsToExcel() {
+            if (database.logs.length === 0) {
+                triggerNotification("No Data", "Logs table is currently empty.", "error");
+                return;
+            }
+
+            let csv = "Date,Time,UID,Name,Department,Role,Event Status\r\n";
+            database.logs.forEach(l => {
+                const dateObj = new Date(l.timestamp);
+                
+                // Format Date (MM/DD/YYYY)
+                const dateStr = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric', month: '2-digit', day: '2-digit'
+                });
+
+                // Format Time (12-hour AM/PM)
+                let hours = dateObj.getHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                const mins = dateObj.getMinutes().toString().padStart(2, '0');
+                const secs = dateObj.getSeconds().toString().padStart(2, '0');
+                const timeStr = `${hours.toString().padStart(2, '0')}:${mins}:${secs} ${ampm}`;
+
+                csv += `"${dateStr}","${timeStr}","${l.uid}","${l.name}","${l.dept}","${l.role}","${l.event}"\r\n`;
+            });
+
+            // Using Blob approach to bypass native WebView2 data URI restrictions on Windows
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Attendance_Logs_Export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            triggerNotification("Export Complete", "Attendance logs successfully downloaded.", "success");
+        }
+
+        /* ==========================================================================
+           10. SYSTEM SETTINGS & CONFIGURATION HANDLERS
+           ========================================================================== */
+        function loadSystemSettingsToUI() {
+            document.getElementById('setting-org-name').value = database.settings.orgName || "T.R. YANGCO CATHOLIC EDUCATIONAL INSTITUTE, INC.";
+            document.getElementById('setting-location').value = database.settings.location || "SCHOOL YEAR 2026-2027";
+            document.getElementById('setting-duty-start').value = database.settings.dutyStartTime || "07:30";
+            document.getElementById('setting-duty-end').value = database.settings.dutyEndTime || "16:30";
+            document.getElementById('setting-break-start').value = database.settings.breakStartTime || "12:00";
+            document.getElementById('setting-break-end').value = database.settings.breakEndTime || "13:00";
+            document.getElementById('setting-grace').value = database.settings.gracePeriodMinutes || 15;
+            document.getElementById('setting-enable-audio').checked = database.settings.audioBeeps !== false;
+            document.getElementById('setting-enable-speech').checked = database.settings.voiceGreetings !== false;
+            document.getElementById('setting-admin-username').value = database.settings.adminUsername || "TRYCEII";
+            document.getElementById('setting-admin-password').value = database.settings.adminPassword || "401282tryceii";
+            document.getElementById('setting-google-sheets-url').value = database.settings.googleSheetsUrl || "https://script.google.com/macros/s/AKfycbz6H1gG-XPPq_c8MlTUhgX9odgxjEeYKmPTKNAW9k4rZEfLz3ZwH0Cw5mNblSdYmjbH/exec";
+        }
+
+        function saveSystemSettings() {
+            database.settings.orgName = document.getElementById('setting-org-name').value;
+            database.settings.location = document.getElementById('setting-location').value;
+            database.settings.dutyStartTime = document.getElementById('setting-duty-start').value;
+            database.settings.dutyEndTime = document.getElementById('setting-duty-end').value;
+            database.settings.breakStartTime = document.getElementById('setting-break-start').value;
+            database.settings.breakEndTime = document.getElementById('setting-break-end').value;
+            database.settings.gracePeriodMinutes = document.getElementById('setting-grace').value;
+            database.settings.audioBeeps = document.getElementById('setting-enable-audio').checked;
+            database.settings.voiceGreetings = document.getElementById('setting-enable-speech').checked;
+            database.settings.adminUsername = document.getElementById('setting-admin-username').value.trim() || "TRYCEII";
+            database.settings.adminPassword = document.getElementById('setting-admin-password').value.trim() || "401282tryceii";
+            database.settings.googleSheetsUrl = document.getElementById('setting-google-sheets-url').value.trim();
+
+            saveDatabase();
+            triggerNotification("Settings Saved", "Global schedules and settings have been configured.", "success");
+            renderDashboard();
+        }
+
+        function backupDatabase() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(database));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `rfid_system_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+        }
+
+        function triggerRestoreUpload() {
+            document.getElementById('database-restore-file').click();
+        }
+
+        function restoreDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const restored = JSON.parse(e.target.result);
+                    if (restored.settings && restored.personnel && restored.logs) {
+                        database = restored;
+                        saveDatabase();
+                        triggerNotification("Database Restored", "All systems and profiles imported successfully.", "success");
+                        renderDashboard();
+                        renderPersonnelList();
+                    } else {
+                        triggerNotification("Import Failed", "JSON properties do not conform to schema requirements.", "error");
+                    }
+                } catch (err) {
+                    triggerNotification("Import Corrupted", "Failed to parse system configuration JSON.", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetSystem() {
+            openConfirmModal("CRITICAL WARNING: This clears all profiles, schedules, settings, and logs. Return to factory default?", () => {
+                localStorage.removeItem('rf_attend_db_v3');
+                location.reload();
+            });
+        }
+
+        /* ==========================================================================
+           10.5 CUSTOM CONFIRMATION MODAL LOGIC
+           ========================================================================== */
+        let confirmActionCallback = null;
+
+        function openConfirmModal(message, callback) {
+            document.getElementById('modal-confirm-message').innerText = message;
+            confirmActionCallback = callback;
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('modal-confirm').classList.add('hidden');
+            confirmActionCallback = null;
+        }
+
+        function executeConfirmAction() {
+            if (confirmActionCallback) confirmActionCallback();
+            closeConfirmModal();
+        }
+
+        /* ==========================================================================
+           11. ADMIN AUTHENTICATION
+           ========================================================================== */
+        function openAdminLoginModal() {
+            document.getElementById('admin-username').value = "";
+            document.getElementById('admin-password').value = "";
+            document.getElementById('admin-login-error').classList.add('hidden');
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+            
+            // Auto focus username
+            setTimeout(() => { document.getElementById('admin-username').focus(); }, 100);
+        }
+
+        function closeAdminLoginModal() {
+            document.getElementById('modal-admin-login').classList.add('hidden');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('admin-username').value;
+            const p = document.getElementById('admin-password').value;
+
+            const validUser = database.settings.adminUsername || "TRYCEII";
+            const validPass = database.settings.adminPassword || "401282tryceii";
+
+            if (u === validUser && p === validPass) {
+                document.getElementById('admin-nav-links').classList.remove('hidden');
+                document.getElementById('btn-admin-login').classList.add('hidden');
+                document.getElementById('btn-admin-logout').classList.remove('hidden');
+                closeAdminLoginModal();
+                triggerNotification("Authentication Successful", "Admin panel unlocked.", "success");
+                switchTab('dashboard'); // Auto-navigate to dashboard on login
+            } else {
+                document.getElementById('admin-login-error').classList.remove('hidden');
+            }
+        }
+
+        function handleAdminLogout() {
+            document.getElementById('admin-nav-links').classList.add('hidden');
+            document.getElementById('btn-admin-login').classList.remove('hidden');
+            document.getElementById('btn-admin-logout').classList.add('hidden');
+            triggerNotification("Logged Out", "Admin session closed safely.", "success");
+            switchTab('scanner'); // Kick back to default view
+        }
+
+        /* ==========================================================================
+           12. FULLSCREEN KIOSK MODE & MEDIA UNLOCKER
+           ========================================================================== */
+        let systemReady = false;
+        function initializeSystemGestures() {
+            if (systemReady) return;
+            systemReady = true;
+            
+            // 1. Silently unlock Web Audio and Speech Synthesis engines
+            getAudioContext();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices(); // Force browsers to start loading voices list
+                let unlockSpeech = new SpeechSynthesisUtterance(''); // Empty string avoids blocking the engine queue
+                unlockSpeech.volume = 0;
+                window.speechSynthesis.speak(unlockSpeech);
+            }
+            
+            // 2. Automatically request fullscreen to launch kiosk mode seamlessly
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen automatically blocked by browser until next interaction."));
+            }
+            
+            ['click', 'keydown', 'touchstart'].forEach(evt => window.removeEventListener(evt, initializeSystemGestures, { capture: true }));
+        }
+        
+        ['click', 'keydown', 'touchstart'].forEach(evt => window.addEventListener(evt, initializeSystemGestures, { capture: true, once: true }));
+
+        /* ==========================================================================
+           13. LIVE SYSTEM TIME CLOCK
+           ========================================================================== */
+        function updateLiveClock() {
+            const timeEl = document.getElementById('live-time-clock');
+            const dateEl = document.getElementById('live-date-clock');
+            const hugeTimeEl = document.getElementById('live-scan-huge-clock');
+            const hugeDateEl = document.getElementById('live-scan-huge-date');
+            
+            if (!timeEl && !hugeTimeEl) return;
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Explicitly construct 12-hour format to avoid browser locale bugs (like missing colons)
+            let hours = now.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12; // Convert 0 to 12 for midnight/noon
+            const mins = now.getMinutes().toString().padStart(2, '0');
+            const secs = now.getSeconds().toString().padStart(2, '0');
+
+            // Create blinking colon effect synced with system seconds
+            const showColon = now.getSeconds() % 2 === 0;
+            const colonHtml = showColon ? ':' : '<span class="opacity-0">:</span>';
+            const animatedTimeStr = `${hours.toString().padStart(2, '0')}${colonHtml}${mins}${colonHtml}${secs} ${ampm}`;
+
+            if (timeEl) timeEl.innerHTML = animatedTimeStr;
+            if (dateEl) dateEl.innerText = dateStr;
+            if (hugeTimeEl) hugeTimeEl.innerHTML = animatedTimeStr;
+            if (hugeDateEl) hugeDateEl.innerText = dateStr;
+        }
+
+        /* ==========================================================================
+           14. INITIAL BOOTSTRAP MOUNT EVENT
+           ========================================================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start clock with a robust interval for Tauri webviews
+            updateLiveClock();
+            setInterval(updateLiveClock, 250);
+
+            // Force immediate sync when app wakes from sleep or background
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    updateLiveClock();
+                }
+            });
+
+            // Enforce location restrictions before loading anything else
+            verifyLocation();
+            
+            // Load DB
+            loadDatabase();
+            
+            // Build visual dashboards
+            renderDashboard();
+            loadSystemSettingsToUI();
+
+            // Flush any pending network sync logs that were dropped in previous session
+            flushSyncQueue();
+            
+            // Render Lucide icons
+            lucide.createIcons();
+            
+            // Set to scanner tab initially since it's the only public tab
+            switchTab('scanner');
+
+            // Attempt to trigger auto-fullscreen and unlock media once the app loads
+            setTimeout(initializeSystemGestures, 800);
+        });
+    </script>
+</body>
+</html>
