@@ -1,9 +1,11 @@
 name: Build Windows App
 
-on:
+"on":
   push:
-    branches: [ main, master ]
-  workflow_dispatch: # Allows you to trigger the build manually
+    branches:
+      - main
+      - master
+  workflow_dispatch: {}
 
 jobs:
   build-windows:
